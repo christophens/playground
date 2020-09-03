@@ -4,6 +4,8 @@ import re
 import random
 import string
 
+#improved version with better operation switching. Work in progress.
+
 def get_user_input() -> str:
     print('Input: ')
     return input()
@@ -99,4 +101,3 @@ def main_c():
 
 
 main_c()
-# Testmessage
