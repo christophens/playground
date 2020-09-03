@@ -62,14 +62,16 @@ def evaluate_operations(a: str, b:str, operand:str, intermediate_results: dict) 
         b = intermediate_results.pop(b)
     
     switcher = {
-        '/' : a / b,
-        '*' : a * b,
-        '+' : a + b,
-        '-' : a - b,
-        '^' : pow(a, b)
+        '/' : lambda a, b : a / b,
+        '*' : lambda a, b : a * b,
+        '+' : lambda a, b : a + b,
+        '-' : lambda a, b : a - b,
+        '^' : lambda a, b : pow(a, b)
     }
+
     new_key = create_new_key(intermediate_results)
-    intermediate_results[new_key] = switcher.get(operand)
+    intermediate_results[new_key] = switcher.get(operand)(a, b)
+    
     return new_key, intermediate_results
 
 def create_new_key(intermediate_results: dict) -> str:
