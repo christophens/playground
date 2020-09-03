@@ -4,8 +4,7 @@ import re
 import random
 import string
 
-# Improving annotations.
-
+# Constant improvement.
 
 def get_user_input() -> str:
     """
@@ -14,7 +13,7 @@ def get_user_input() -> str:
     print('Input: ')
     return input()
 
-def get_innermost_parantheses(text: str) -> (list, str):
+def get_next_operation(text: str) -> (list, str):
     """
     Find the next expression to evaluate. Returns two objects:
     - A list with two integers that indicate the position of the next expression.
@@ -68,6 +67,10 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
     """
     # Define operations list
     operations_list = ['^', '*', '/', '+', '-']
+    
+    if not operator_list:
+        new_key = create_new_key(intermediate_results)
+        intermediate_results[new_key] = float(number_list[0])       
 
     for operation in operations_list:
         while operation in operator_list:
@@ -119,7 +122,7 @@ def main_c():
     repeat = True
     intermediate_results = {}
     while repeat:
-        indices, string = get_innermost_parantheses(text)
+        indices, string = get_next_operation(text)
         numbers, operators = get_operations(string)
         intermediate_results = evaluate_expression(numbers, operators, intermediate_results)
         if indices != [0, 0]:
