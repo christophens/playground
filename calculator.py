@@ -4,40 +4,68 @@ import re
 import random
 import string
 
-#improved version with better operation switching. Work in progress.
+# Improving annotations.
+
 
 def get_user_input() -> str:
+    """
+    Get user input from terminal.
+    """
     print('Input: ')
     return input()
 
-def get_innermost_parantheses(text: str) -> (tuple, str):
-    # Define regex to extract all parts inside a paranthesis
+def get_innermost_parantheses(text: str) -> (list, str):
+    """
+    Find the next expression to evaluate. Returns two objects:
+    - A list with two integers that indicate the position of the next expression.
+    - A string with the expression.
+    Example: 4 * 3 * (3 + 4 * (5 / 7)) -> 5 / 7
+    """
+    # Define regex to extract the innermost complete pair of parantheses. 
+    # Use re.search method to obtain the first complete set of parantheses.
+    # If at least one set of parantheses exist it returns a re.match object.
+    # The match includes the paranthesis, i.e. '(5 / 7)
     paranthesis_regex = r'\([^\(\)]+\)'
     result = re.search(paranthesis_regex, text)
+
+    # If no parantheses are found, return the entire string and set the list with the position of the 
+    # index to [0, 0]. 
     if result == None:
         indices = [0, 0]
-        string = text        
+        string = text
+    # If a match object is found, slice and return the resulting string without the parantheses.      
     else:
         indices = [result.start(), result.end()]
         string = result.group(0)[1:-1]
     return indices, string
 
 def get_operations(text: str) -> (list, list):
-    # Define regex to extract all numbers in a string and extract these numbers
+    """
+    Returns a list with numbers and operators in order of their appearance in a given expression.
+    """
+    # Define regex to extract all numbers in a string, as well as placeholders for intermediate results.
+    # These placeholders are of the form '_xx_', with x being a lowercase letter.
+    # Use re.findall method to get a list of all numbers from the string.
     number_regex =  r'(?<=[\+\-\*\/\(\^])\s*[\+\-]?\s*\d+\.?\d*|_[a-z]{2}_|^\s*[\+\-]?\s*\d+\.?\d*|^_[a-z]{2}'
     number_list = re.findall(number_regex, text)
 
-    # Strip all remaining whitespaces
+    # Strip all remaining whitespaces.
     number_list = [number.replace(' ','') for number in number_list]
 
+    # Define regex to extract mathematical operators +, -, *, /, ^.
     operator_regex = r'(?<=[\d\)])\s*[\+\-\/\*\^]'
     operator_list = re.findall(operator_regex, text)
+
+    # Strip all remaining whitespaces.
     operator_list = [operator.replace(' ','') for operator in operator_list]
 
+    # Return both lists.
     return number_list, operator_list
 
 def evaluate_expression(number_list: list, operator_list: list, intermediate_results: dict) -> dict:
-    # Evaluate all operations based on the established order of operations
+    """
+    Evaluate all operations based on the established order of operations.
+    """
     # Define operations list
     operations_list = ['^', '*', '/', '+', '-']
 
