@@ -46,7 +46,7 @@ def get_next_operation(text: str) -> (list, str, str):
     
     return indices, string, func
 
-def get_operations(text: str) -> (list, list):
+def get_numbers_operators(text: str) -> (list, list):
     """
     Returns a list with numbers and operators in order of their appearance in a given expression.
     """
@@ -84,13 +84,13 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
             operator_index = operator_list.index(operation)
             a = number_list[operator_index]
             b = number_list.pop(operator_index + 1)
-            (number_list[operator_index], intermediate_results) =  evaluate_operations(a, b, operation, intermediate_results)
+            (number_list[operator_index], intermediate_results) =  arithmetic_operations(a, b, operation, intermediate_results)
             operator_list.remove(operation)
     
     while operator_list:
         a = number_list[0]
         b = number_list.pop(1)
-        (number_list[0], intermediate_results) =  evaluate_operations(a, b, operator_list.pop(0), intermediate_results)
+        (number_list[0], intermediate_results) =  arithmetic_operations(a, b, operator_list.pop(0), intermediate_results)
 
     
     
@@ -101,7 +101,7 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
     
     return intermediate_results
 
-def evaluate_operations(a: str, b:str, operand:str, intermediate_results: dict) -> (str, dict):
+def arithmetic_operations(a: str, b:str, operand:str, intermediate_results: dict) -> (str, dict):
     try:
         a = float(a)
     except ValueError:
@@ -146,8 +146,6 @@ def get_significant_digits(a: float, b: float, operator: str) -> int:
     else:
         return 20
 
-
-
 def evaluate_func(intermediate_results: dict, func: str) -> dict:
     
     switcher = {
@@ -160,7 +158,6 @@ def evaluate_func(intermediate_results: dict, func: str) -> dict:
     intermediate_results[key] = switcher.get(func)(intermediate_results[key])
 
     return intermediate_results
-
 
 def create_new_key(intermediate_results: dict) -> str:
     if not intermediate_results:
@@ -183,7 +180,7 @@ def main_c(*args):
     repeat = True
     while repeat:
         indices, string, func = get_next_operation(text)
-        numbers, operators = get_operations(string)
+        numbers, operators = get_numbers_operators(string)
         intermediate_results = evaluate_expression(numbers, operators, intermediate_results, func) 
         text = text.replace(text[indices[0] : indices[1]], list(intermediate_results.keys())[0])
         if indices[0] == 0:
