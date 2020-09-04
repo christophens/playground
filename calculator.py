@@ -144,7 +144,7 @@ def get_significant_digits(a: float, b: float, operator: str) -> int:
     elif operator == '*':
         return a_dec + b_dec
     else:
-        return 100
+        return 20
 
 
 
