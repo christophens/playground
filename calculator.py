@@ -27,7 +27,7 @@ def get_next_operation(text: str) -> (list, str, str):
     # The match includes the paranthesis, i.e. '(5 / 7)'
     paranthesis_regex = r'\([^\(\)]+\)'
     result = re.search(paranthesis_regex, text)
-    func_set = {'sin', 'cos', 'exp'}
+    func_set = {'sin', 'cos', 'exp', 'abs'}
     func = None
     # If no parantheses are found, return the entire string and set the list with the position of the
     # extracted string to [0, length of the the string - 1]. 
@@ -143,8 +143,9 @@ def get_significant_digits(a: float, b: float, operator: str) -> int:
         return max(a_dec, b_dec)
     elif operator == '*':
         return a_dec + b_dec
-    elif operator == '/':
-        return 
+    else:
+        return 100
+
 
 
 def evaluate_func(intermediate_results: dict, func: str) -> dict:
@@ -152,7 +153,8 @@ def evaluate_func(intermediate_results: dict, func: str) -> dict:
     switcher = {
         'sin' : lambda a: math.sin(a),
         'cos' : lambda a: math.cos(a),
-        'exp' : lambda a: math.exp(a)
+        'exp' : lambda a: math.exp(a),
+        'abs' : lambda a: abs(a)
     }
     key = list(intermediate_results.keys())[0]
     intermediate_results[key] = switcher.get(func)(intermediate_results[key])
@@ -173,7 +175,7 @@ def create_new_key(intermediate_results: dict) -> str:
     return key
 
 def main_c(*args):
-    if __name__ == '__main':
+    if not args:
         text = get_user_input()
     else:
         text = args[0]
@@ -186,7 +188,9 @@ def main_c(*args):
         text = text.replace(text[indices[0] : indices[1]], list(intermediate_results.keys())[0])
         if indices[0] == 0:
             repeat = False
-        
+
+    if not args: 
+        print(str(list(intermediate_results.values())[0]))    
     return (list(intermediate_results.values())[0])
-    print(str(list(intermediate_results.values())[0]))
+    
 
