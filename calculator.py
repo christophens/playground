@@ -53,14 +53,14 @@ def get_numbers_operators(text: str) -> (list, list):
     # Define regex to extract all numbers in a string, as well as placeholders for intermediate results.
     # These placeholders are of the form '_xx_', with x being a lowercase letter.
     # Use re.findall method to get a list of all numbers from the string.
-    number_regex =  r'(?<=[\+\-\*\/\(\^])\s*[\+\-]?\s*\d+\.?\d*|_[a-z]{2}_|^\s*[\+\-]?\s*\d+\.?\d*|^_[a-z]{2}'
+    number_regex =  r'(?<=[\+\-\*\/\^])\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*|^\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*'
     number_list = re.findall(number_regex, text)
 
     # Strip all remaining whitespaces.
     number_list = [number.replace(' ','') for number in number_list]
 
     # Define regex to extract mathematical operators +, -, *, /, ^.
-    operator_regex = r'(?<=[\d\)])\s*[\+\-\/\*\^]'
+    operator_regex = r'(?<=[\d\)A-z])\s*[\+\-\/\*\^,]'
     operator_list = re.findall(operator_regex, text)
 
     # Strip all remaining whitespaces.
@@ -78,8 +78,8 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
         new_key = create_new_key(intermediate_results)
         intermediate_results[new_key] = float(number_list[0])       
     
-    atomic_operations = ['^', '*', '/']
-    for operation in atomic_operations:
+    mul_diff_exp_list = ['^', '*', '/']
+    for operation in mul_diff_exp_list:
         while operation in operator_list:
             operator_index = operator_list.index(operation)
             a = number_list[operator_index]
@@ -130,13 +130,12 @@ def arithmetic_operations(a: str, b:str, operand:str, intermediate_results: dict
 def get_significant_digits(a: float, b: float, operator: str) -> int:
     a = str(a)
     b = str(b)    
-    decimal_regex = r'(?<=.)[0]*[1-9]+'
+    decimal_regex = r'(?<=\.)[0]*[1-9]+'
     a_dec = re.search(decimal_regex, a)
     b_dec = re.search(decimal_regex, b)
 
     a_dec = a_dec.end()- a_dec.start() if a_dec else 0
     b_dec = b_dec.end()- b_dec.start() if b_dec else 0
-
 
     
     if operator in ['+', '-']:
@@ -161,14 +160,12 @@ def evaluate_func(intermediate_results: dict, func: str) -> dict:
 
 def create_new_key(intermediate_results: dict) -> str:
     if not intermediate_results:
-        key = ''.join(random.choices(string.ascii_lowercase, k=2))
-        key = '_' + key + '_'
+        key = ''.join(random.choices(string.ascii_letters, k=2))
     else:
         key = list(intermediate_results.keys())
         key = key[0] 
         while key in intermediate_results:
-            key = ''.join(random.choices(string.ascii_lowercase, k=2))
-            key = '_' + key + '_'
+            key = ''.join(random.choices(string.ascii_letters, k=2))
     return key
 
 def main_c(*args):
@@ -189,5 +186,6 @@ def main_c(*args):
     if not args: 
         print(str(list(intermediate_results.values())[0]))    
     return (list(intermediate_results.values())[0])
-    
 
+
+main_c()
