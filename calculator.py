@@ -13,11 +13,12 @@ def get_user_input() -> str:
     print('Input: ')
     return input()
 
-def get_next_operation(text: str) -> (list, str):
+def get_next_operation(text: str) -> (list, str, str):
     """
     Find the next expression to evaluate. Returns two objects:
     - A list with two integers that indicate the position of the next expression.
     - A string with the expression.
+    - A string that contains special mathematical functions.
     Example: 4 * 3 * (3 + 4 * (5 / 7)) -> 5 / 7
     """
     # Define regex to extract the innermost complete pair of parantheses. 
@@ -26,17 +27,24 @@ def get_next_operation(text: str) -> (list, str):
     # The match includes the paranthesis, i.e. '(5 / 7)
     paranthesis_regex = r'\([^\(\)]+\)'
     result = re.search(paranthesis_regex, text)
-
+    func_set = {'sin', 'cos', 'exp'}
+    func = None
     # If no parantheses are found, return the entire string and set the list with the position of the 
     # index to [0, 0]. 
     if result == None:
-        indices = [0, 0]
         string = text
+        indices = [0, len(text) - 1]
     # If a match object is found, slice and return the resulting string without the parantheses.      
     else:
         indices = [result.start(), result.end()]
         string = result.group(0)[1:-1]
-    return indices, string
+        if text[result.start() - 3: result.start()] in func_set:
+            indices = [result.start() - 3, result.end()]
+            func = text[result.start() - 3: result.start()]
+
+
+    
+    return indices, string, func
 
 def get_operations(text: str) -> (list, list):
     """
@@ -61,7 +69,7 @@ def get_operations(text: str) -> (list, list):
     # Return both lists.
     return number_list, operator_list
 
-def evaluate_expression(number_list: list, operator_list: list, intermediate_results: dict) -> dict:
+def evaluate_expression(number_list: list, operator_list: list, intermediate_results: dict, func: str) -> dict:
     """
     Evaluate all operations based on the established order of operations.
     """
@@ -79,6 +87,11 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
             b = number_list.pop(operator_index + 1)
             (number_list[operator_index], intermediate_results) =  evaluate_operations(a, b, operation, intermediate_results)
             operator_list.remove(operation)
+    
+    if func:
+        intermediate_results = evaluate_func(intermediate_results, func)
+
+
     
     return intermediate_results
 
@@ -105,6 +118,23 @@ def evaluate_operations(a: str, b:str, operand:str, intermediate_results: dict) 
     
     return new_key, intermediate_results
 
+def evaluate_func(intermediate_results: dict, func: str) -> dict:
+    
+    switcher = {
+        'sin' : lambda a: math.sin(a),
+        'cos' : lambda a: math.cos(a),
+        'exp' : lambda a: math.exp(a)
+    }
+    key = list(intermediate_results.keys())[0]
+    intermediate_results[key] = switcher.get(func)(intermediate_results[key])
+
+    return intermediate_results
+    
+
+
+
+
+
 def create_new_key(intermediate_results: dict) -> str:
     if not intermediate_results:
         key = ''.join(random.choices(string.ascii_lowercase, k=2))
@@ -119,16 +149,16 @@ def create_new_key(intermediate_results: dict) -> str:
 
 def main_c():
     text = get_user_input()
-    repeat = True
     intermediate_results = {}
+    repeat = True
     while repeat:
-        indices, string = get_next_operation(text)
+        indices, string, func = get_next_operation(text)
         numbers, operators = get_operations(string)
-        intermediate_results = evaluate_expression(numbers, operators, intermediate_results)
-        if indices != [0, 0]:
-            text = text.replace(text[indices[0] : indices[1]], list(intermediate_results.keys())[0])
-        else:
+        intermediate_results = evaluate_expression(numbers, operators, intermediate_results, func) 
+        text = text.replace(text[indices[0] : indices[1]], list(intermediate_results.keys())[0])
+        if indices[0] == 0:
             repeat = False
+        
     
     print(str(list(intermediate_results.values())[0]))
 
