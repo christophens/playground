@@ -73,19 +73,26 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
     """
     Evaluate all operations based on the established order of operations.
     """
-    # Define operations list
-    operations_list = ['^', '*', '/', '+', '-']
+    
     if not operator_list:
         new_key = create_new_key(intermediate_results)
         intermediate_results[new_key] = float(number_list[0])       
-
-    for operation in operations_list:
+    
+    atomic_operations = ['^', '*', '/']
+    for operation in atomic_operations:
         while operation in operator_list:
             operator_index = operator_list.index(operation)
             a = number_list[operator_index]
             b = number_list.pop(operator_index + 1)
             (number_list[operator_index], intermediate_results) =  evaluate_operations(a, b, operation, intermediate_results)
             operator_list.remove(operation)
+    
+    while operator_list:
+        a = number_list[0]
+        b = number_list.pop(1)
+        (number_list[0], intermediate_results) =  evaluate_operations(a, b, operator_list.pop(0), intermediate_results)
+
+    
     
     if func:
         intermediate_results = evaluate_func(intermediate_results, func)
