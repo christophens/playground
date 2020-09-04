@@ -110,7 +110,7 @@ def evaluate_operations(a: str, b:str, operand:str, intermediate_results: dict) 
         b = float(b)
     except ValueError:
         b = intermediate_results.pop(b)
-    
+    significant_digits = get_significant_digits(a, b, operand)
     switcher = {
         '/' : lambda a, b : a / b,
         '*' : lambda a, b : a * b,
@@ -120,9 +120,32 @@ def evaluate_operations(a: str, b:str, operand:str, intermediate_results: dict) 
     }
 
     new_key = create_new_key(intermediate_results)
-    intermediate_results[new_key] = switcher.get(operand)(a, b)
+    result = switcher.get(operand)(a, b)
+    result = round(result, significant_digits)
+
+    intermediate_results[new_key] = result
     
     return new_key, intermediate_results
+
+def get_significant_digits(a: float, b: float, operator: str) -> int:
+    a = str(a)
+    b = str(b)    
+    decimal_regex = r'(?<=.)[0]*[1-9]+'
+    a_dec = re.search(decimal_regex, a)
+    b_dec = re.search(decimal_regex, b)
+
+    a_dec = a_dec.end()- a_dec.start() if a_dec else 0
+    b_dec = b_dec.end()- b_dec.start() if b_dec else 0
+
+
+    
+    if operator in ['+', '-']:
+        return max(a_dec, b_dec)
+    elif operator == '*':
+        return a_dec + b_dec
+    elif operator == '/':
+        return 
+
 
 def evaluate_func(intermediate_results: dict, func: str) -> dict:
     
@@ -135,10 +158,6 @@ def evaluate_func(intermediate_results: dict, func: str) -> dict:
     intermediate_results[key] = switcher.get(func)(intermediate_results[key])
 
     return intermediate_results
-    
-
-
-
 
 
 def create_new_key(intermediate_results: dict) -> str:
