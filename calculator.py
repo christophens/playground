@@ -24,7 +24,7 @@ def get_next_operation(text: str) -> (list, str, str):
     # Define regex to extract the innermost complete pair of parantheses. 
     # Use re.search method to obtain the first complete set of parantheses.
     # If at least one set of parantheses exist it returns a re.match object.
-    # The match includes the paranthesis, i.e. '(5 / 7)
+    # The match includes the paranthesis, i.e. '(5 / 7)'
     paranthesis_regex = r'\([^\(\)]+\)'
     result = re.search(paranthesis_regex, text)
     func_set = {'sin', 'cos', 'exp'}
