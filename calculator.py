@@ -153,8 +153,11 @@ def create_new_key(intermediate_results: dict) -> str:
             key = '_' + key + '_'
     return key
 
-def main_c():
-    text = get_user_input()
+def main_c(*args):
+    if __name__ == '__main':
+        text = get_user_input()
+    else:
+        text = args[0]
     intermediate_results = {}
     repeat = True
     while repeat:
@@ -165,8 +168,6 @@ def main_c():
         if indices[0] == 0:
             repeat = False
         
-    
+    return (list(intermediate_results.values())[0])
     print(str(list(intermediate_results.values())[0]))
 
-
-main_c()
