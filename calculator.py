@@ -29,8 +29,8 @@ def get_next_operation(text: str) -> (list, str, str):
     result = re.search(paranthesis_regex, text)
     func_set = {'sin', 'cos', 'exp'}
     func = None
-    # If no parantheses are found, return the entire string and set the list with the position of the 
-    # index to [0, 0]. 
+    # If no parantheses are found, return the entire string and set the list with the position of the
+    # extracted string to [0, length of the the string - 1]. 
     if result == None:
         string = text
         indices = [0, len(text) - 1]
@@ -75,7 +75,6 @@ def evaluate_expression(number_list: list, operator_list: list, intermediate_res
     """
     # Define operations list
     operations_list = ['^', '*', '/', '+', '-']
-    
     if not operator_list:
         new_key = create_new_key(intermediate_results)
         intermediate_results[new_key] = float(number_list[0])       
