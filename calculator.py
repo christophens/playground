@@ -4,7 +4,7 @@ import re
 import random
 import string
 
-# Constant improvement.
+# Revert to original.
 
 def get_user_input() -> str:
     """
