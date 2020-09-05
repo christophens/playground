@@ -27,7 +27,8 @@ def get_next_operation(text: str) -> (list, str, str):
     # The match includes the paranthesis, i.e. '(5 / 7)'
     paranthesis_regex = r'\([^\(\)]+\)'
     result = re.search(paranthesis_regex, text)
-    func_set = {'sin', 'cos', 'exp', 'abs'}
+
+    func_set = {'sin', 'cos', 'exp', 'abs', 'log'}
     func = None
     # If no parantheses are found, return the entire string and set the list with the position of the
     # extracted string to [0, length of the the string - 1]. 
@@ -46,19 +47,24 @@ def get_next_operation(text: str) -> (list, str, str):
     
     return indices, string, func
 
-def get_numbers_operators(text: str) -> (list, list):
+def get_numbers_operators(text: str, variables_dict: list) -> (list, list, dict, int):
     """
     Returns a list with numbers and operators in order of their appearance in a given expression.
     """
     # Define regex to extract all numbers in a string, as well as placeholders for intermediate results.
     # These placeholders are of the form '_xx_', with x being a lowercase letter.
     # Use re.findall method to get a list of all numbers from the string.
-    number_regex =  r'(?<=[\+\-\*\/\^])\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*|^\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*'
-    number_list = re.findall(number_regex, text)
+    variables_regex =  r'(?<=[\+\-\*\/\^\,])\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*|^\s*[\+\-]?\s*\d+\.?\d*|[A-Za-z_]+[A-Za-z0-9_]*'
+    variables_list = re.findall(variables_regex, text)
 
-    # Strip all remaining whitespaces.
-    number_list = [number.replace(' ','') for number in number_list]
-
+    variables_index = len(variables_dict)
+    variables_dict_var = variables_dict.keys() # returns DYNAMIC view object
+    for idx, entry in enumerate(variables_list):
+        if not entry in variables_dict_var:
+            new_var = create_new_var(list(variables_dict_var))
+            variables_dict[new_var] = float(entry.replace(' ',''))
+            variables_list[idx] = new_var
+    
     # Define regex to extract mathematical operators +, -, *, /, ^.
     operator_regex = r'(?<=[\d\)A-z])\s*[\+\-\/\*\^,]'
     operator_list = re.findall(operator_regex, text)
@@ -67,49 +73,58 @@ def get_numbers_operators(text: str) -> (list, list):
     operator_list = [operator.replace(' ','') for operator in operator_list]
 
     # Return both lists.
-    return number_list, operator_list
+    return variables_list, operator_list, variables_dict, variables_index
 
-def evaluate_expression(number_list: list, operator_list: list, intermediate_results: dict, func: str) -> dict:
+def evaluate_expression(variables_list: list, operator_list: list, variables_dict: list, variables_index: int,func: str) -> dict:
     """
     Evaluate all operations based on the established order of operations.
     """
     
     if not operator_list:
-        new_key = create_new_key(intermediate_results)
-        intermediate_results[new_key] = float(number_list[0])       
+        if func: 
+            variables_dict[variables_list[variables_index]] = evaluate_func(func, variables_dict[variables_list[variables_index]])
+        return variables_dict   
     
     mul_diff_exp_list = ['^', '*', '/']
     for operation in mul_diff_exp_list:
         while operation in operator_list:
             operator_index = operator_list.index(operation)
-            a = number_list[operator_index]
-            b = number_list.pop(operator_index + 1)
-            (number_list[operator_index], intermediate_results) =  arithmetic_operations(a, b, operation, intermediate_results)
-            operator_list.remove(operation)
+            a = variables_dict[variables_list[operator_index]]
+            b = variables_dict.pop(variables_list.pop(operator_index + 1))
+            variables_dict[variables_list[operator_index]] =  arithmetic_operations(a, b, operator_list.pop(operator_index))
     
-    while operator_list:
-        a = number_list[0]
-        b = number_list.pop(1)
-        (number_list[0], intermediate_results) =  arithmetic_operations(a, b, operator_list.pop(0), intermediate_results)
+    if ',' not in operator_list:
+        while operator_list:
+            a = variables_dict[variables_list[variables_index]]
+            b = variables_dict.pop(variables_list.pop(variables_index + 1))
+            variables_dict[variables_list[variables_index]] =  arithmetic_operations(a, b, operator_list.pop(0))
+    
+        if func:
+            variables_dict[variables_list[variables_index]] = evaluate_func(func, variables_dict[variables_list[variables_index]])
+    else:
+        idx = 0
+        while operator_list[idx] != ',':
+            a = variables_dict[variables_list[variables_index]]
+            b = variables_dict.pop(variables_list.pop(variables_index + 1))
+            variables_dict[variables_list[variables_index]] =  arithmetic_operations(a, b, operator_list[idx])
+            idx = idx + 1
+        
+        operator_list = operator_list[idx + 1:]
+        while operator_list:
+            a = variables_dict[variables_list[variables_index + 1]]
+            b = variables_dict.pop(variables_list.pop(variables_index + 2))
+            variables_dict[variables_list[variables_index + 1]] =  arithmetic_operations(a, b, operator_list.pop(0))
+
+        variables_dict[variables_list[variables_index]] = evaluate_func(func, variables_dict[variables_list[variables_index]], variables_dict.pop(variables_list.pop(variables_index + 1)))
+
+
+
 
     
-    
-    if func:
-        intermediate_results = evaluate_func(intermediate_results, func)
+    return variables_dict
 
+def arithmetic_operations(a: str, b:str, operand:str) -> (float):
 
-    
-    return intermediate_results
-
-def arithmetic_operations(a: str, b:str, operand:str, intermediate_results: dict) -> (str, dict):
-    try:
-        a = float(a)
-    except ValueError:
-        a = intermediate_results.pop(a)
-    try:
-        b = float(b)
-    except ValueError:
-        b = intermediate_results.pop(b)
     significant_digits = get_significant_digits(a, b, operand)
     switcher = {
         '/' : lambda a, b : a / b,
@@ -119,13 +134,11 @@ def arithmetic_operations(a: str, b:str, operand:str, intermediate_results: dict
         '^' : lambda a, b : pow(a, b)
     }
 
-    new_key = create_new_key(intermediate_results)
     result = switcher.get(operand)(a, b)
     result = round(result, significant_digits)
-
-    intermediate_results[new_key] = result
     
-    return new_key, intermediate_results
+    return result
+
 
 def get_significant_digits(a: float, b: float, operator: str) -> int:
     a = str(a)
@@ -145,26 +158,25 @@ def get_significant_digits(a: float, b: float, operator: str) -> int:
     else:
         return 20
 
-def evaluate_func(intermediate_results: dict, func: str) -> dict:
+def evaluate_func(func: str, *args: float) -> dict:
     
     switcher = {
-        'sin' : lambda a: math.sin(a),
-        'cos' : lambda a: math.cos(a),
-        'exp' : lambda a: math.exp(a),
-        'abs' : lambda a: abs(a)
+        'sin' : lambda a: math.sin(a[0]),
+        'cos' : lambda a: math.cos(a[0]),
+        'exp' : lambda a: math.exp(a[0]),
+        'abs' : lambda a: abs(a[0]),
+        'log' : lambda a: math.log(a[0], a[1])
     }
-    key = list(intermediate_results.keys())[0]
-    intermediate_results[key] = switcher.get(func)(intermediate_results[key])
+    
 
-    return intermediate_results
+    return switcher.get(func)(args)
 
-def create_new_key(intermediate_results: dict) -> str:
-    if not intermediate_results:
+def create_new_var(key_list: list) -> str:
+    if not key_list:
         key = ''.join(random.choices(string.ascii_letters, k=2))
     else:
-        key = list(intermediate_results.keys())
-        key = key[0] 
-        while key in intermediate_results:
+        key = key_list[0] 
+        while key in key_list:
             key = ''.join(random.choices(string.ascii_letters, k=2))
     return key
 
@@ -173,19 +185,18 @@ def main_c(*args):
         text = get_user_input()
     else:
         text = args[0]
-    intermediate_results = {}
+    variables_dict = {}
     repeat = True
     while repeat:
         indices, string, func = get_next_operation(text)
-        numbers, operators = get_numbers_operators(string)
-        intermediate_results = evaluate_expression(numbers, operators, intermediate_results, func) 
-        text = text.replace(text[indices[0] : indices[1]], list(intermediate_results.keys())[0])
+        variables_list, operators, variables_dict, index = get_numbers_operators(string, variables_dict)
+        variables_dict = evaluate_expression(variables_list, operators, variables_dict, index, func) 
+        text = text.replace(text[indices[0] : indices[1]], list(variables_dict.keys())[-1])
         if indices[0] == 0:
             repeat = False
 
     if not args: 
-        print(str(list(intermediate_results.values())[0]))    
-    return (list(intermediate_results.values())[0])
+        print(str(variables_dict[variables_list[index]]))    
+    return (variables_dict[variables_list[index]])
 
 
-main_c()
