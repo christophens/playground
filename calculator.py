@@ -47,7 +47,7 @@ def get_next_operation(text: str) -> (list, str, str):
     
     return indices, string, func
 
-def get_numbers_operators(text: str, var_dict: list) -> (list, list, dict, int):
+def get_numbers_operators(text: str, var_dict: dict, svar_dict:dict) -> (list, list, dict, int):
     """
     Returns a list with numbers and operators in order of their appearance in a given expression.
     """
@@ -59,11 +59,16 @@ def get_numbers_operators(text: str, var_dict: list) -> (list, list, dict, int):
 
 
     var_dict_keys = var_dict.keys() # returns DYNAMIC view object
+    svar_dict_keys = svar_dict.keys()
     for idx, entry in enumerate(var_list):
         if not entry in var_dict_keys:
-            new_var = create_new_var(list(var_dict_keys))
-            var_dict[new_var] = float(entry.replace(' ',''))
-            var_list[idx] = new_var
+            if not entry in svar_dict_keys:
+                new_var = create_new_var(list(var_dict_keys) + list(svar_dict_keys))
+                var_dict[new_var] = float(entry.replace(' ',''))
+                var_list[idx] = new_var
+            else:
+                var_dict[entry] = svar_dict[entry]
+
     
     # Define regex to extract mathematical operators +, -, *, /, ^.
     operator_regex = r'(?<=[\d\)A-z])\s*[\+\-\/\*\^,]'
@@ -73,16 +78,16 @@ def get_numbers_operators(text: str, var_dict: list) -> (list, list, dict, int):
     operator_list = [operator.replace(' ','') for operator in operator_list]
 
     # Return both lists.
-    return var_list, operator_list, var_dict, variables_index
+    return var_list, operator_list, var_dict
 
-def evaluate_expression(var_list: list, operator_list: list, var_dict: list, variables_index: int,func: str) -> dict:
+def evaluate_expression(var_list: list, operator_list: list, var_dict: list,func: str) -> dict:
     """
     Evaluate all operations based on the established order of operations.
     """
     
     if not operator_list:
         if func: 
-            var_dict[var_list[variables_index]] = evaluate_func(func, var_dict[var_list[variables_index]])
+            var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]])
         return var_dict   
     
     mul_diff_exp_list = ['^', '*', '/']
@@ -95,30 +100,27 @@ def evaluate_expression(var_list: list, operator_list: list, var_dict: list, var
     
     if ',' not in operator_list:
         while operator_list:
-            a = var_dict[var_list[variables_index]]
-            b = var_dict.pop(var_list.pop(variables_index + 1))
-            var_dict[var_list[variables_index]] =  arithmetic_operations(a, b, operator_list.pop(0))
+            a = var_dict[var_list[0]]
+            b = var_dict.pop(var_list.pop(0 + 1))
+            var_dict[var_list[0]] =  arithmetic_operations(a, b, operator_list.pop(0))
     
         if func:
-            var_dict[var_list[variables_index]] = evaluate_func(func, var_dict[var_list[variables_index]])
+            var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]])
     else:
         idx = 0
         while operator_list[idx] != ',':
-            a = var_dict[var_list[variables_index]]
-            b = var_dict.pop(var_list.pop(variables_index + 1))
-            var_dict[var_list[variables_index]] =  arithmetic_operations(a, b, operator_list[idx])
+            a = var_dict[var_list[0]]
+            b = var_dict.pop(var_list.pop(1))
+            var_dict[var_list[0]] =  arithmetic_operations(a, b, operator_list[idx])
             idx = idx + 1
         
         operator_list = operator_list[idx + 1:]
         while operator_list:
-            a = var_dict[var_list[variables_index + 1]]
-            b = var_dict.pop(var_list.pop(variables_index + 2))
-            var_dict[var_list[variables_index + 1]] =  arithmetic_operations(a, b, operator_list.pop(0))
+            a = var_dict[var_list[1]]
+            b = var_dict.pop(var_list.pop(2))
+            var_dict[var_list[1]] =  arithmetic_operations(a, b, operator_list.pop(0))
 
-        var_dict[var_list[variables_index]] = evaluate_func(func, var_dict[var_list[variables_index]], var_dict.pop(var_list.pop(variables_index + 1)))
-
-
-
+        var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]], var_dict.pop(var_list.pop(1)))
 
     
     return var_dict
@@ -186,17 +188,20 @@ def main_c(*args):
     else:
         text = args[0]
     var_dict = {}
+    svar_dict ={}
     repeat = True
     while repeat:
         indices, string, func = get_next_operation(text)
-        var_list, operators, var_dict, index = get_numbers_operators(string, var_dict)
-        var_dict = evaluate_expression(var_list, operators, var_dict, index, func) 
+        var_list, operators, var_dict = get_numbers_operators(string, var_dict, svar_dict)
+        var_dict = evaluate_expression(var_list, operators, var_dict, func) 
         text = text.replace(text[indices[0] : indices[1]], list(var_dict.keys())[-1])
         if indices[0] == 0:
             repeat = False
 
     if not args: 
-        print(str(var_dict[var_list[index]]))    
-    return (var_dict[var_list[index]])
+        print(str(var_dict[var_list[0]]))    
+    return (var_dict[var_list[0]])
+
+main_c()
 
 
