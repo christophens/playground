@@ -1,3 +1,2 @@
-Lokales Repository für playground
-
+Playground.
 
