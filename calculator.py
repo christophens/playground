@@ -6,12 +6,25 @@ import string
 
 # Revert to original.
 
-def get_user_input() -> str:
+def get_user_input() -> (str, str):
     """
     Get user input from terminal.
     """
     print('Input: ')
-    return input()
+    user_input = input()
+
+    a = user_input.find('=')
+    var = None
+    if a != -1:
+        var = user_input[0:a]
+        var = var.replace(' ','')
+        text = user_input[a + 1:]
+
+    else:
+        text = user_input
+    return var, text
+
+
 
 def get_next_operation(text: str) -> (list, str, str):
     """
@@ -233,7 +246,7 @@ def main_c(*args):
     if args:
         text = args[0]
     else:
-        text = get_user_input()
+        var, text = get_user_input()
         while text !='quit':
             var_dict = {}
             repeat = True
@@ -246,7 +259,10 @@ def main_c(*args):
                     repeat = False
             svar_dict['ans'] = var_dict[var_list[0]]
             print(str(var_dict[var_list[0]]) + '\n')
-            text = get_user_input()
+            if var:
+                svar_dict[var] = var_dict[var_list[0]]
+                var = None
+            var, text = get_user_input()
             
     return (var_dict[var_list[0]])
 
