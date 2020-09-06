@@ -1,5 +1,9 @@
-.vscode/settings.json
-.DS_Store
-.ipynb_checkpoints/Untitled-checkpoint.ipynb
-Untitled.ipynb
-__pycache__/calculator.cpython-38.pyc
+/.DS_Store
+/.git
+/.gitignore
+/.ipynb_checkpoints
+/.vscode
+/README.txt
+/Untitled.ipynb
+/__pycache__
+/testing.py
