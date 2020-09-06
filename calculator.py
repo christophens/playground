@@ -183,23 +183,26 @@ def create_new_var(key_list: list) -> str:
     return key
 
 def main_c(*args):
-    if not args:
-        text = get_user_input()
-    else:
-        text = args[0]
-    var_dict = {}
     svar_dict ={}
-    repeat = True
-    while repeat:
-        indices, string, func = get_next_operation(text)
-        var_list, operators, var_dict = get_numbers_operators(string, var_dict, svar_dict)
-        var_dict = evaluate_expression(var_list, operators, var_dict, func) 
-        text = text.replace(text[indices[0] : indices[1]], list(var_dict.keys())[-1])
-        if indices[0] == 0:
-            repeat = False
+    if args:
+        text = args[0]
+    else:
+        text = get_user_input()
+        while text !='quit':
+            var_dict = {}
+            repeat = True
+            while repeat:
+                indices, string, func = get_next_operation(text)
+                var_list, operators, var_dict = get_numbers_operators(string, var_dict, svar_dict)
+                var_dict = evaluate_expression(var_list, operators, var_dict, func) 
+                text = text.replace(text[indices[0] : indices[1]], list(var_dict.keys())[-1])
+                if indices[0] == 0:
+                    repeat = False
+            svar_dict['ans'] = var_dict[var_list[0]]
+            print(str(var_dict[var_list[0]]) + '\n')
+            text = get_user_input()
+    
 
-    if not args: 
-        print(str(var_dict[var_list[0]]))    
     return (var_dict[var_list[0]])
 
 main_c()
