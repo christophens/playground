@@ -16,7 +16,7 @@ def get_user_input(svar_dict: dict) -> (str, str):
         print('Input: ')
         user_input = input()
 
-        if user_input == 'store':
+        if user_input == 'workspace':
             for entry in svar_dict:
                 print(entry + ': ' + str(svar_dict[entry]))
         elif 'clear' in user_input:
