@@ -6,19 +6,37 @@ import string
 
 # Revert to original.
 
-def get_user_input() -> (str, str):
+def get_user_input(svar_dict: dict) -> (str, str):
     """
     Get user input from terminal.
     """
     print('Input: ')
     user_input = input()
 
-    a = user_input.find('=')
+    svar_dict_keys = svar_dict.keys()
+
+    while user_input == 'store' or user_input in ['clear ' + i for i in list(svar_dict_keys)]:
+        if user_input == 'store':
+            for entry in svar_dict:
+                print(entry + ': ' + str(svar_dict[entry]))
+
+        if user_input in ['clear ' + i for i in list(svar_dict_keys)]:
+            del svar_dict[user_input[6:]]
+        
+        
+        
+        print('Input: ')
+        user_input = input()
+        
+        
+
+
+    eq_sign = user_input.find('=')
     var = None
-    if a != -1:
-        var = user_input[0:a]
+    if eq_sign != -1:
+        var = user_input[0:eq_sign]
         var = var.replace(' ','')
-        text = user_input[a + 1:]
+        text = user_input[eq_sign + 1:]
 
     else:
         text = user_input
@@ -30,6 +48,7 @@ def get_next_operation(text: str) -> (list, str, str):
     """
     Find the next expression to evaluate. 
     Input:
+    - String with mathematical operation. Example: '4 * 3 * (3 + 4 * (5 / 7))'
     
     
     Return objects:
@@ -82,14 +101,11 @@ def get_numbers_operators(text: str, var_dict: dict, svar_dict:dict) -> (list, l
     Example: {'ans': 3.0}
     
     Output objects:
-    - var_list: list with variables in the order of their apperance. \n \
-    Example: 5 - ans * az returns ['fT', 'ans, 'az'] \n
+    - var_list: list with floats in the order of their apperance. \n \
+    Example: 5 - ans * az returns [5.0, 3.0, -4.36] \n
 
     - var_operators: list with arithmetic operators in order of their appearance. \n \
     Example: 5 - ans * az returns ['-', '*'] \n
-
-    - var_dict: Dictionary that maps float values to all elements in var_list. \n \
-    Example: 5 - ans * az returns {'ft': 5.0, 'ans': 3.0, 'az': -4.36}
     """
 
 
@@ -110,16 +126,11 @@ def get_numbers_operators(text: str, var_dict: dict, svar_dict:dict) -> (list, l
         if not entry in var_dict_keys:
             # Check if entry is contained in svar_dict
             if not entry in svar_dict_keys:
-                # Create a new variable that is different from all existing variable names
-                new_var = create_new_var(list(var_dict_keys) + list(svar_dict_keys))
-
-                # Add the new variable to var_dict, the variable name is the key, the value is a float of the number
-                var_dict[new_var] = float(entry)
-                # Change number to variable in var_list
-                var_list[idx] = new_var
-            # Copy from svar_dict to var_dict
+                var_list[idx] = float(entry)
             else:
-                var_dict[entry] = svar_dict[entry]
+                var_list[idx] = svar_dict[entry]
+        else:
+            var_list[idx] = var_dict.pop(entry)
 
     
     operator_string = re.sub(variables_regex, '', text)
@@ -128,50 +139,50 @@ def get_numbers_operators(text: str, var_dict: dict, svar_dict:dict) -> (list, l
     # Return both lists and the dictionairy.
     return var_list, operator_list, var_dict
 
-def evaluate_expression(var_list: list, operator_list: list, var_dict: list,func: str) -> dict:
+def evaluate_expression(var_list: list, operator_list: list, func: str) -> float:
     """
     Evaluate all operations based on the established order of operations.
     """
-    # If no operator is supplied, return var_dict without after evaluation of function keywords.
+    # If no operator is supplied, return var_list[0].
     if not operator_list:
         if func: 
-            var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]])
-        return var_dict   
+            var_list[0] = evaluate_func(func, var_list[0])
+        return var_list[0]
     
     mul_diff_exp_list = ['^', '*', '/']
     for operation in mul_diff_exp_list:
         while operation in operator_list:
             operator_index = operator_list.index(operation)
-            a = var_dict[var_list[operator_index]]
-            b = var_dict.pop(var_list.pop(operator_index + 1))
-            var_dict[var_list[operator_index]] =  arithmetic_operations(a, b, operator_list.pop(operator_index))
+            a = var_list[operator_index]
+            b = var_list.pop(operator_index + 1)
+            var_list[operator_index] =  arithmetic_operations(a, b, operator_list.pop(operator_index))
     
     if ',' not in operator_list:
         while operator_list:
-            a = var_dict[var_list[0]]
-            b = var_dict.pop(var_list.pop(0 + 1))
-            var_dict[var_list[0]] =  arithmetic_operations(a, b, operator_list.pop(0))
+            a = var_list[0]
+            b = var_list.pop(1)
+            var_list[0] =  arithmetic_operations(a, b, operator_list.pop(0))
     
         if func:
-            var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]])
+            var_list[0] = evaluate_func(func, var_list[0])
     else:
         idx = 0
         while operator_list[idx] != ',':
-            a = var_dict[var_list[0]]
-            b = var_dict.pop(var_list.pop(1))
-            var_dict[var_list[0]] =  arithmetic_operations(a, b, operator_list[idx])
+            a = var_list[0]
+            b = var_list.pop(1)
+            var_list[0] =  arithmetic_operations(a, b, operator_list[idx])
             idx = idx + 1
         
         operator_list = operator_list[idx + 1:]
         while operator_list:
-            a = var_dict[var_list[1]]
-            b = var_dict.pop(var_list.pop(2))
-            var_dict[var_list[1]] =  arithmetic_operations(a, b, operator_list.pop(0))
+            a = var_list[1]
+            b = var_list.pop(2)
+            var_list[1] =  arithmetic_operations(a, b, operator_list.pop(0))
 
-        var_dict[var_list[0]] = evaluate_func(func, var_dict[var_list[0]], var_dict.pop(var_list.pop(1)))
+        var_list[0] = evaluate_func(func, var_list[0], var_list.pop(1))
 
     
-    return var_dict
+    return var_list[0] #var_list has 1 entry, so this function returns a float, not a list
 
 def arithmetic_operations(a: float, b:float, operand:str) -> (float):
     """
@@ -188,7 +199,7 @@ def arithmetic_operations(a: float, b:float, operand:str) -> (float):
     }
 
     result = switcher.get(operand)(a, b)
-    result = round(result, significant_digits)
+    #result = round(result, significant_digits)
     
     return result
 
@@ -243,28 +254,34 @@ def create_new_var(var_list: list) -> str:
 
 def main_c(*args):
     svar_dict ={}
+    svar_dict_keys = svar_dict.keys()
     if args:
         text = args[0]
     else:
-        var, text = get_user_input()
+        var, text = get_user_input(svar_dict)
         while text !='quit':
             var_dict = {}
+            var_dict_keys = var_dict.keys()
             repeat = True
             while repeat:
                 indices, string, func = get_next_operation(text)
+
                 var_list, operators, var_dict = get_numbers_operators(string, var_dict, svar_dict)
-                var_dict = evaluate_expression(var_list, operators, var_dict, func) 
-                text = text.replace(text[indices[0] : indices[1]], list(var_dict.keys())[0])
+                intermediate_result = evaluate_expression(var_list, operators, func)
+
+                new_key = create_new_var(list(svar_dict_keys) + list(var_dict_keys))
+                var_dict[new_key] = intermediate_result
+                text = text.replace(text[indices[0] : indices[1]], new_key)
+
                 if indices[0] == 0:
                     repeat = False
-            svar_dict['ans'] = var_dict[var_list[0]]
-            print(str(var_dict[var_list[0]]) + '\n')
+            svar_dict['ans'] = intermediate_result
             if var:
-                svar_dict[var] = var_dict[var_list[0]]
-                var = None
-            var, text = get_user_input()
+                svar_dict[var] = intermediate_result
+            print(str(intermediate_result) + '\n')
+            var, text = get_user_input(svar_dict)
             
-    return (var_dict[var_list[0]])
+    return (intermediate_result)
 
 main_c()
 
