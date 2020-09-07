@@ -138,11 +138,6 @@ def evaluate_expression(var_list: list, operator_list: list, func: str) -> float
     """
     Evaluate all operations based on the established order of operations.
     """
-    # If no operator is supplied, return var_list[0].
-    if not operator_list:
-        if func: 
-            var_list[0] = evaluate_func(func, var_list[0])
-        return var_list[0]
     
     mul_diff_exp_list = ['^', '*', '/']
     for operation in mul_diff_exp_list:
@@ -152,31 +147,21 @@ def evaluate_expression(var_list: list, operator_list: list, func: str) -> float
             b = var_list.pop(operator_index + 1)
             var_list[operator_index] =  arithmetic_operations(a, b, operator_list.pop(operator_index))
     
-    if ',' not in operator_list:
-        while operator_list:
-            a = var_list[0]
-            b = var_list.pop(1)
-            var_list[0] =  arithmetic_operations(a, b, operator_list.pop(0))
+    index = 0
+    while operator_list:
+        if operator_list[0] != ',':
+            a = var_list[index]
+            b = var_list.pop(index + 1)
+            var_list[index] =  arithmetic_operations(a, b, operator_list.pop(index))
+        else:
+            index = 1
+            del operator_list[0]
     
-        if func:
-            var_list[0] = evaluate_func(func, var_list[0])
-    else:
-        idx = 0
-        while operator_list[idx] != ',':
-            a = var_list[0]
-            b = var_list.pop(1)
-            var_list[0] =  arithmetic_operations(a, b, operator_list[idx])
-            idx = idx + 1
-        
-        operator_list = operator_list[idx + 1:]
-        while operator_list:
-            a = var_list[1]
-            b = var_list.pop(2)
-            var_list[1] =  arithmetic_operations(a, b, operator_list.pop(0))
-
+    if index == 1:
         var_list[0] = evaluate_func(func, var_list[0], var_list.pop(1))
+    elif func:
+        var_list[0] = evaluate_func(func, var_list[0])
 
-    
     return var_list[0] #var_list has 1 entry, so this function returns a float, not a list
 
 def arithmetic_operations(a: float, b:float, operand:str) -> (float):
@@ -265,8 +250,8 @@ def main_c(*args):
             while repeat:
                 indices, string, func = get_next_operation(text)
 
-                var_list, operators, var_dict = get_numbers_operators(string, var_dict, svar_dict)
-                intermediate_result = evaluate_expression(var_list, operators, func)
+                var_list, op_list, var_dict = get_numbers_operators(string, var_dict, svar_dict)
+                intermediate_result = evaluate_expression(var_list, op_list, func)
 
                 new_key = create_new_var(list(svar_dict_keys) + list(var_dict_keys))
                 var_dict[new_key] = intermediate_result
