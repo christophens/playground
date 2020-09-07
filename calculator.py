@@ -37,9 +37,6 @@ def get_user_input(svar_dict: dict) -> (str, str):
                 text = user_input
             return var, text
 
-        
-
-
 
 def get_next_operation(text: str) -> (list, str, str):
     """
@@ -201,7 +198,6 @@ def arithmetic_operations(a: float, b:float, operand:str) -> (float):
     #result = round(result, significant_digits)
     
     return result
-
 
 def get_significant_decimals(a: float, b: float, operator: str) -> int:
     """
