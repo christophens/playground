@@ -37,7 +37,6 @@ def get_user_input(svar_dict: dict) -> (str, str):
                 text = user_input
             return var, text
 
-
 def get_next_operation(text: str) -> (list, str, str):
     """
     Find the next expression to evaluate. 
@@ -66,7 +65,7 @@ def get_next_operation(text: str) -> (list, str, str):
     # extracted string to [0, length of the the string - 1]. 
     if result == None:
         string = text
-        indices = [0, len(text) - 1]
+        indices = [-1, len(text) - 1]
     # If a match object is found, slice and return the resulting string without the parantheses.      
     else:
         indices = [result.start(), result.end()]
@@ -271,9 +270,9 @@ def main_c(*args):
 
                 new_key = create_new_var(list(svar_dict_keys) + list(var_dict_keys))
                 var_dict[new_key] = intermediate_result
-                text = text.replace(text[indices[0] : indices[1]], new_key)
+                text = text.replace(text[max(indices[0], 0) : indices[1]], new_key)
 
-                if indices[0] == 0:
+                if indices[0] == -1:
                     repeat = False
             svar_dict['ans'] = intermediate_result
             if var:
