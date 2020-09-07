@@ -10,37 +10,34 @@ def get_user_input(svar_dict: dict) -> (str, str):
     """
     Get user input from terminal.
     """
-    print('Input: ')
-    user_input = input()
-
     svar_dict_keys = svar_dict.keys()
 
-    while user_input == 'store' or user_input in ['clear ' + i for i in list(svar_dict_keys)]:
+    while True:
+        print('Input: ')
+        user_input = input()
+
         if user_input == 'store':
             for entry in svar_dict:
                 print(entry + ': ' + str(svar_dict[entry]))
+        elif 'clear' in user_input:
+            clear_regex = r'clear\s*'
+            var_to_clear = re.sub(clear_regex, '', user_input)
+            if var_to_clear:
+                del svar_dict[var_to_clear]
+            else:
+                svar_dict = {'ans' :svar_dict['ans']}
+        else:
+            eq_sign = user_input.find('=')
+            var = None
+            if eq_sign != -1:
+                var = user_input[0:eq_sign]
+                var = var.replace(' ','')
+                text = user_input[eq_sign + 1:]
+            else:
+                text = user_input
+            return var, text
 
-        if user_input in ['clear ' + i for i in list(svar_dict_keys)]:
-            del svar_dict[user_input[6:]]
         
-        
-        
-        print('Input: ')
-        user_input = input()
-        
-        
-
-
-    eq_sign = user_input.find('=')
-    var = None
-    if eq_sign != -1:
-        var = user_input[0:eq_sign]
-        var = var.replace(' ','')
-        text = user_input[eq_sign + 1:]
-
-    else:
-        text = user_input
-    return var, text
 
 
 
@@ -66,7 +63,7 @@ def get_next_operation(text: str) -> (list, str, str):
 
     # Define a set of accepted function keywords that preceed the parantheses.
     # Set the default return value that contains the function keyword to None
-    func_set = {'sin', 'cos', 'exp', 'abs', 'log'}
+    func_set = {'sin', 'cos', 'exp', 'abs', 'log', 'sind', 'cosd', 'sqrt'}
     func = None
     # If no parantheses are found, return the entire string and set the list with the position of the
     # extracted string to [0, length of the the string - 1]. 
@@ -79,9 +76,11 @@ def get_next_operation(text: str) -> (list, str, str):
         string = result.group(0)[1:-1]
         # If a valid function keyword preceeds the parantheses, change the position of the extracted string to
         # include the function keyword and return the keyword.
-        if text[result.start() - 3: result.start()] in func_set:
-            indices = [result.start() - 3, result.end()]
-            func = text[result.start() - 3: result.start()]
+        for i in range(3,5): 
+            if text[result.start() - i: result.start()] in func_set:
+                indices = [result.start() - i, result.end()]
+                func = text[result.start() - i: result.start()]
+                break
 
 
     
@@ -230,11 +229,16 @@ def evaluate_func(func: str, *args: float) -> dict:
     Evaluate mathematical functions.
     """
     switcher = {
-        'sin' : lambda a: math.sin(a[0]),
-        'cos' : lambda a: math.cos(a[0]),
-        'exp' : lambda a: math.exp(a[0]),
-        'abs' : lambda a: abs(a[0]),
-        'log' : lambda a: math.log(a[0], a[1])
+        'sin' : lambda a: math.sin(a[0]), # sin in rad
+        'sind': lambda a: math.sin(math.radians(a[0])), # sin in deg
+        'cos' : lambda a: math.cos(a[0]), # cos in rad
+        'cosd': lambda a: math.cos(math.radians(a[0])), # cos in deg
+        'tan' : lambda a: math.tan(a[0]), # tan in rad
+        'tand': lambda a: math.tan(math.radians(a[0])), # tan in deg
+        'exp' : lambda a: math.exp(a[0]), # e ^ x
+        'abs' : lambda a: abs(a[0]),  # |x|
+        'log' : lambda a: math.log(a[0], a[1]), #log(a,b) = n <-> b ^ n = a
+        'sqrt': lambda a: math.sqrt(a[0])
     }
     
 
