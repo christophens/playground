@@ -19,6 +19,7 @@ def get_user_input(svar_dict: dict) -> (str, str):
         if user_input == 'workspace':
             for entry in svar_dict:
                 print(entry + ': ' + str(svar_dict[entry]))
+        
         elif 'clear' in user_input:
             clear_regex = r'clear\s*'
             var_to_clear = re.sub(clear_regex, '', user_input)
@@ -45,9 +46,10 @@ def get_next_operation(text: str) -> (list, str, str):
     
     
     Return objects:
-    - A list with two integers that indicate the position of the next expression within the innput string.
-    - A string with the expression.
-    - A string that contains a mathematical function keyword such as sin, cos, ...
+    - List with two integers that indicate the position of the next expression
+    within the innput string.
+    -  String with the expression.
+    - String that contains a mathematical function keyword such as sin, cos, ...
     Example: 4 * 3 * (3 + 4 * (5 / 7)) -> 5 / 7
     """
     # Define regex to extract the innermost complete pair of parantheses. 
@@ -61,17 +63,19 @@ def get_next_operation(text: str) -> (list, str, str):
     # Set the default return value that contains the function keyword to None
     func_set = {'sin', 'cos', 'exp', 'abs', 'log', 'sind', 'cosd', 'sqrt'}
     func = None
-    # If no parantheses are found, return the entire string and set the list with the position of the
-    # extracted string to [0, length of the the string - 1]. 
-    if result == None:
+    # If no parantheses are found, return the entire string and set the list 
+    # with the position of the extracted string to 
+    # [-1, length of the the string - 1]. 
+    if result is None:
         string = text
         indices = [-1, len(text) - 1]
     # If a match object is found, slice and return the resulting string without the parantheses.      
     else:
         indices = [result.start(), result.end()]
         string = result.group(0)[1:-1]
-        # If a valid function keyword preceeds the parantheses, change the position of the extracted string to
-        # include the function keyword and return the keyword.
+        # If a valid function keyword preceeds the parantheses, change the
+        # position of the extracted string to include the function keyword 
+        # and return the keyword.
         for i in range(3,5): 
             if text[result.start() - i: result.start()] in func_set:
                 indices = [result.start() - i, result.end()]
@@ -117,7 +121,7 @@ def get_numbers_operators(text: str, var_dict: dict, svar_dict:dict) -> (list, l
 
     # Loop over var_list to assign variables to numbers and to copy saved variables from svar_dict to var_dict.
     for idx, entry in enumerate(var_list):
-        # Do nothing if an entry in var_list is already stored as a variable in var_dict
+        # Do nothing if an entry is already stored in var_dict
         if not entry in var_dict_keys:
             # Check if entry is contained in svar_dict
             if not entry in svar_dict_keys:
